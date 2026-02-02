@@ -1,0 +1,36 @@
+# Maven / Java
+/target/
+/**/*.class
+/.mvn/wrapper/maven-wrapper.jar
+
+# Node / frontend
+/node_modules/
+/frontend/node_modules/
+/npm-debug.log*
+/yarn-error.log
+
+# Vite build output (optional - ignore if you rebuild on Render)
+/src/main/resources/static/
+/frontend/dist/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# IDEs and editors
+/.idea/
+/*.iml
+/.vscode/
+/*.class
+/.project
+/.classpath
+/.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

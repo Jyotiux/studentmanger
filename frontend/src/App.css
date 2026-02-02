@@ -1,0 +1,7 @@
+body { font-family: Arial, sans-serif; }
+.container { max-width:800px; margin:40px auto; }
+input { margin:4px; padding:6px; }
+button { margin-left:8px; padding:6px 10px; }
+.del { margin-left: 12px; background:#e74c3c; color:white; border:none; }
+li { margin:8px 0; }
+.form { margin-top: 8px }

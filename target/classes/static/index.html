@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Management</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width:800px; margin:40px auto; }
+    input { margin:4px; }
+    button { margin-left:8px; }
+    li { margin:6px 0; }
+  </style>
+</head>
+<body>
+  <h1>Students</h1>
+  <ul id="list"></ul>
+
+  <h3>Add Student</h3>
+  <input id="first" placeholder="First" />
+  <input id="last" placeholder="Last" />
+  <input id="email" placeholder="Email" />
+  <button id="add">Add</button>
+
+  <script>
+    async function load() {
+      const res = await fetch('/students');
+      const data = await res.json();
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      data.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = `${s.id}: ${s.firstName} ${s.lastName} (${s.email})`;
+        const del = document.createElement('button'); del.textContent='Delete';
+        del.onclick = async () => { await fetch('/students/'+s.id, { method: 'DELETE' }); load(); };
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('add').onclick = async () => {
+      const first = document.getElementById('first').value;
+      const last = document.getElementById('last').value;
+      const email = document.getElementById('email').value;
+      await fetch('/students', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: first, lastName: last, email })
+      });
+      document.getElementById('first').value='';
+      document.getElementById('last').value='';
+      document.getElementById('email').value='';
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>
