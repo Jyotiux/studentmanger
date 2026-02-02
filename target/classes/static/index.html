@@ -5,51 +5,93 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Student Management</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width:800px; margin:40px auto; }
-    input { margin:4px; }
-    button { margin-left:8px; }
-    li { margin:6px 0; }
+    body { font-family: Arial, sans-serif; max-width:900px; margin:24px auto; }
+    .container { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background:#f6f6f6; }
+    .field { margin-bottom:8px; }
+    input { width:100%; padding:6px; box-sizing:border-box; }
+    .errors { margin-top:8px; color:#900; }
+    .err { margin:4px 0; }
+    button { padding:6px 10px; }
   </style>
 </head>
 <body>
   <h1>Students</h1>
-  <ul id="list"></ul>
 
-  <h3>Add Student</h3>
-  <input id="first" placeholder="First" />
-  <input id="last" placeholder="Last" />
-  <input id="email" placeholder="Email" />
-  <button id="add">Add</button>
+  <div class="container">
+    <div class="left">
+      <table id="students-table">
+        <thead><tr><th>ID</th><th>First</th><th>Last</th><th>Email</th><th>Action</th></tr></thead>
+        <tbody id="list"></tbody>
+      </table>
+    </div>
+
+    <div class="right">
+      <h3>Add Student</h3>
+      <form id="add-form" novalidate>
+        <div class="field"><label>First</label><input id="first" name="first" required maxlength="100" /></div>
+        <div class="field"><label>Last</label><input id="last" name="last" required maxlength="100" /></div>
+        <div class="field"><label>Email</label><input id="email" name="email" type="email" required maxlength="200" /></div>
+        <div class="errors" id="form-errors"></div>
+        <button type="submit">Add</button>
+      </form>
+    </div>
+  </div>
 
   <script>
-    async function load() {
-      const res = await fetch('/students');
-      const data = await res.json();
-      const list = document.getElementById('list');
-      list.innerHTML = '';
-      data.forEach(s => {
-        const li = document.createElement('li');
-        li.textContent = `${s.id}: ${s.firstName} ${s.lastName} (${s.email})`;
-        const del = document.createElement('button'); del.textContent='Delete';
-        del.onclick = async () => { await fetch('/students/'+s.id, { method: 'DELETE' }); load(); };
-        li.appendChild(del);
-        list.appendChild(li);
+    function showErrors(errors) {
+      const box = document.getElementById('form-errors');
+      box.innerHTML = '';
+      if (!errors) return;
+      Object.entries(errors).forEach(([field, msg]) => {
+        const p = document.createElement('div'); p.textContent = `${field}: ${msg}`; p.className='err';
+        box.appendChild(p);
       });
     }
 
-    document.getElementById('add').onclick = async () => {
-      const first = document.getElementById('first').value;
-      const last = document.getElementById('last').value;
-      const email = document.getElementById('email').value;
-      await fetch('/students', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName: first, lastName: last, email })
+    async function load() {
+      const res = await fetch('/students');
+      const data = await res.json();
+      const tbody = document.getElementById('list');
+      tbody.innerHTML = '';
+      data.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.id}</td><td>${s.firstName}</td><td>${s.lastName}</td><td>${s.email}</td>`;
+        const td = document.createElement('td');
+        const del = document.createElement('button'); del.textContent='Delete';
+        del.onclick = async () => { await fetch('/students/'+s.id, { method: 'DELETE' }); load(); };
+        td.appendChild(del);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
       });
+    }
+
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showErrors(null);
+      const first = document.getElementById('first').value.trim();
+      const last = document.getElementById('last').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      // simple client-side checks
+      const clientErrors = {};
+      if (!first) clientErrors.firstName = 'First is required';
+      if (!last) clientErrors.lastName = 'Last is required';
+      if (!email) clientErrors.email = 'Email is required';
+      else if (!/^\S+@\S+\.\S+$/.test(email)) clientErrors.email = 'Email is not valid';
+      if (Object.keys(clientErrors).length) { showErrors(clientErrors); return; }
+
+      const res = await fetch('/students', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ firstName: first, lastName: last, email }) });
+      if (res.status === 400) {
+        const errs = await res.json(); showErrors(errs); return;
+      }
       document.getElementById('first').value='';
       document.getElementById('last').value='';
       document.getElementById('email').value='';
       load();
-    }
+    });
 
     load();
   </script>
